@@ -1,6 +1,6 @@
-# Assigment — Phase 1: Core API & Database Setup
+# Phase 1: Core API & Database Setup
 
-A Spring Boot 3.x backend service with PostgreSQL and Redis, implementing the foundational entities and REST endpoints for the Grid07 platform.
+A Spring Boot 3.x backend service with PostgreSQL and Redis, implementing the foundational entities and REST endpoints.
 
 ---
 
@@ -20,7 +20,7 @@ A Spring Boot 3.x backend service with PostgreSQL and Redis, implementing the fo
 
 ## Overview
 
-Phase 1 establishes the core infrastructure of Grid07:
+Phase 1 establishes the core infrastructure:
 
 - Spring Boot service wired to PostgreSQL via JPA/Hibernate
 - Redis connection scaffolded and ready for Phase 2 guardrails
@@ -46,20 +46,20 @@ Phase 1 establishes the core infrastructure of Grid07:
 ## Project Structure
 
 ```
-grid07/
+project/
 ├── docker-compose.yml
 ├── pom.xml
 ├── postman/
-│   └── Grid07-Phase1.postman_collection.json
+│   └── Phase1.postman_collection.json
 └── src/
     └── main/
-        ├── java/com/grid07/
+        ├── java/com/app/
         │   ├── controller/        # REST controllers
         │   ├── dto/               # Request / response DTOs
         │   ├── entity/            # JPA entities
         │   ├── repository/        # Spring Data JPA repositories
         │   ├── service/           # Business logic
-        │   └── Grid07Application.java
+        │   └── Application.java
         └── resources/
             └── application.yml
 ```
@@ -186,7 +186,7 @@ This starts:
 
 | Service    | Host & Port       | Credentials                              |
 |------------|-------------------|------------------------------------------|
-| PostgreSQL | localhost:5433    | db: `grid07`, user/pass: `postgres`      |
+| PostgreSQL | localhost:5433    | db: `phase1`, user/pass: `postgres`      |
 | Redis      | localhost:6379    | —                                        |
 
 ---
@@ -222,7 +222,7 @@ The following actors are seeded on first run to make Phase 1 endpoints immediate
 A ready-to-import Postman collection covering all Phase 1 endpoints is included at:
 
 ```
-postman/Grid07-Phase1.postman_collection.json
+postman/Phase1.postman_collection.json
 ```
 
 Import it via **Postman → File → Import** and point the base URL to `http://localhost:8080`.
