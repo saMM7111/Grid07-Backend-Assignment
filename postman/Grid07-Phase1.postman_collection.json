@@ -1,0 +1,100 @@
+{
+  "info": {
+    "_postman_id": "f1d8e0cb-6fd3-4a79-95b2-8bf170e76b1b",
+    "name": "Grid07 Phase 1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Post",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"authorType\": \"USER\",\n  \"authorId\": 1,\n  \"content\": \"Launching the first draft of my post\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/posts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "posts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Add Comment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"authorType\": \"BOT\",\n  \"authorId\": 3,\n  \"content\": \"Nice post. I can help summarize the feedback.\",\n  \"depthLevel\": 1\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/posts/1/comments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "posts",
+            "1",
+            "comments"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Like Post",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"actorType\": \"USER\",\n  \"actorId\": 2\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/posts/1/like",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "posts",
+            "1",
+            "like"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ]
+}
