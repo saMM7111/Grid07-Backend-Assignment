@@ -9,6 +9,7 @@ import com.sam.assigment.api.dto.PostResponse;
 import com.sam.assigment.api.exception.BadRequestException;
 import com.sam.assigment.api.exception.ResourceNotFoundException;
 import com.sam.assigment.domain.Actor;
+import com.sam.assigment.domain.ActorType;
 import com.sam.assigment.domain.Comment;
 import com.sam.assigment.domain.Post;
 import com.sam.assigment.repository.CommentRepository;
@@ -22,11 +23,21 @@ public class PostService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final ActorResolver actorResolver;
+    private final ViralityScoreService viralityScoreService;
+    private final BotReplyGuardrailService botReplyGuardrailService;
 
-    public PostService(PostRepository postRepository, CommentRepository commentRepository, ActorResolver actorResolver) {
+    public PostService(
+            PostRepository postRepository,
+            CommentRepository commentRepository,
+            ActorResolver actorResolver,
+            ViralityScoreService viralityScoreService,
+            BotReplyGuardrailService botReplyGuardrailService
+    ) {
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.actorResolver = actorResolver;
+        this.viralityScoreService = viralityScoreService;
+        this.botReplyGuardrailService = botReplyGuardrailService;
     }
 
     @Transactional
@@ -43,26 +54,61 @@ public class PostService {
     public CommentResponse addComment(Long postId, AddCommentRequest request) {
         Post post = findPost(postId);
         Actor author = actorResolver.resolve(request.authorType(), request.authorId());
+        botReplyGuardrailService.enforceDepthCap(request.depthLevel());
 
-        Comment comment = new Comment(
-                post,
-                author,
-                normalizeText(request.content(), "Comment content cannot be empty"),
-                request.depthLevel()
-        );
+        BotReplyGuardrailService.Reservation reservation = null;
+        boolean rollbackReservation = false;
 
-        Comment saved = commentRepository.save(comment);
-        return toCommentResponse(saved);
+        if (author.getActorType() == ActorType.BOT) {
+            Long humanTargetId = resolveHumanTargetId(post);
+            reservation = botReplyGuardrailService.reserveBotReply(postId, author.getId(), humanTargetId);
+            rollbackReservation = true;
+        }
+
+        try {
+            Comment comment = new Comment(
+                    post,
+                    author,
+                    normalizeText(request.content(), "Comment content cannot be empty"),
+                    request.depthLevel()
+            );
+
+            Comment saved = commentRepository.save(comment);
+            applyCommentViralityScore(postId, author.getActorType());
+            rollbackReservation = false;
+            return toCommentResponse(saved);
+        } finally {
+            if (rollbackReservation) {
+                // Keep Redis counters consistent when DB write or scoring fails.
+                botReplyGuardrailService.rollbackReservation(reservation);
+            }
+        }
     }
 
     @Transactional
     public LikePostResponse likePost(Long postId, LikePostRequest request) {
-        actorResolver.resolve(request.actorType(), request.actorId());
+        Actor actor = actorResolver.resolve(request.actorType(), request.actorId());
 
         Post post = findPost(postId);
         post.incrementLikeCount();
+        if (actor.getActorType() == ActorType.USER) {
+            viralityScoreService.applyInteraction(postId, ViralityInteraction.HUMAN_LIKE);
+        }
 
         return new LikePostResponse(post.getId(), post.getLikeCount(), "Post liked successfully");
+    }
+
+    private void applyCommentViralityScore(Long postId, ActorType actorType) {
+        if (actorType == ActorType.BOT) {
+            viralityScoreService.applyInteraction(postId, ViralityInteraction.BOT_REPLY);
+            return;
+        }
+
+        viralityScoreService.applyInteraction(postId, ViralityInteraction.HUMAN_COMMENT);
+    }
+
+    private Long resolveHumanTargetId(Post post) {
+        return post.getAuthor().getActorType() == ActorType.USER ? post.getAuthor().getId() : null;
     }
 
     private Post findPost(Long postId) {
