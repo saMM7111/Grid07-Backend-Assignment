@@ -26,6 +26,11 @@ spring:
 server:
   port: 8080
 
+app:
+  notifications:
+    cooldown: 15m
+    sweep-cron: "0 */5 * * * *"
+
 management:
   endpoints:
     web:
