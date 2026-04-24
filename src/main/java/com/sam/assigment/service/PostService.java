@@ -25,19 +25,22 @@ public class PostService {
     private final ActorResolver actorResolver;
     private final ViralityScoreService viralityScoreService;
     private final BotReplyGuardrailService botReplyGuardrailService;
+    private final NotificationEngineService notificationEngineService;
 
     public PostService(
             PostRepository postRepository,
             CommentRepository commentRepository,
             ActorResolver actorResolver,
             ViralityScoreService viralityScoreService,
-            BotReplyGuardrailService botReplyGuardrailService
+            BotReplyGuardrailService botReplyGuardrailService,
+            NotificationEngineService notificationEngineService
     ) {
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
         this.actorResolver = actorResolver;
         this.viralityScoreService = viralityScoreService;
         this.botReplyGuardrailService = botReplyGuardrailService;
+        this.notificationEngineService = notificationEngineService;
     }
 
     @Transactional
@@ -75,6 +78,9 @@ public class PostService {
 
             Comment saved = commentRepository.save(comment);
             applyCommentViralityScore(postId, author.getActorType());
+            if (author.getActorType() == ActorType.BOT) {
+                notificationEngineService.handleBotInteraction(post, author, "replied to");
+            }
             rollbackReservation = false;
             return toCommentResponse(saved);
         } finally {
@@ -93,6 +99,8 @@ public class PostService {
         post.incrementLikeCount();
         if (actor.getActorType() == ActorType.USER) {
             viralityScoreService.applyInteraction(postId, ViralityInteraction.HUMAN_LIKE);
+        } else {
+            notificationEngineService.handleBotInteraction(post, actor, "liked");
         }
 
         return new LikePostResponse(post.getId(), post.getLikeCount(), "Post liked successfully");
