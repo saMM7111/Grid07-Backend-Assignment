@@ -1,9 +1,5 @@
 package com.sam.assigment.service;
 
-import com.sam.assigment.domain.Actor;
-import com.sam.assigment.domain.ActorType;
-import com.sam.assigment.domain.Bot;
-import com.sam.assigment.domain.Post;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,13 +28,12 @@ public class NotificationEngineService {
         this.notificationCooldown = notificationCooldown;
     }
 
-    public void handleBotInteraction(Post post, Actor actor, String interactionAction) {
-        if (post.getAuthor().getActorType() != ActorType.USER || actor.getActorType() != ActorType.BOT) {
+    public void handleBotInteraction(Long userId, Long botId, String botName, String interactionAction) {
+        if (userId == null || botId == null) {
             return;
         }
 
-        Long userId = post.getAuthor().getId();
-        String message = buildNotificationMessage(actor, interactionAction);
+        String message = buildNotificationMessage(botId, botName, interactionAction);
         String cooldownKey = cooldownKey(userId);
 
         if (Boolean.TRUE.equals(redisTemplate.hasKey(cooldownKey))) {
@@ -72,9 +67,9 @@ public class NotificationEngineService {
         }
     }
 
-    private String buildNotificationMessage(Actor botActor, String interactionAction) {
-        String botName = botActor instanceof Bot bot ? bot.getName() : "Bot-" + botActor.getId();
-        return "Bot " + botName + " " + interactionAction + " your post.";
+    private String buildNotificationMessage(Long botId, String botName, String interactionAction) {
+        String resolvedBotName = (botName == null || botName.isBlank()) ? "Bot-" + botId : botName.trim();
+        return "Bot " + resolvedBotName + " " + interactionAction + " your post.";
     }
 
     private List<String> drainPendingMessages(String listKey) {

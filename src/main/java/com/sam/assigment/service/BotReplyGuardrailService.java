@@ -1,6 +1,8 @@
 package com.sam.assigment.service;
 
 import com.sam.assigment.api.exception.TooManyRequestsException;
+import com.sam.assigment.domain.ActorType;
+import com.sam.assigment.repository.CommentRepository;
 import java.time.Duration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -13,9 +15,11 @@ public class BotReplyGuardrailService {
     private static final Duration COOLDOWN_WINDOW = Duration.ofMinutes(10);
 
     private final StringRedisTemplate redisTemplate;
+    private final CommentRepository commentRepository;
 
-    public BotReplyGuardrailService(StringRedisTemplate redisTemplate) {
+    public BotReplyGuardrailService(StringRedisTemplate redisTemplate, CommentRepository commentRepository) {
         this.redisTemplate = redisTemplate;
+        this.commentRepository = commentRepository;
     }
 
     public void enforceDepthCap(int depthLevel) {
@@ -28,6 +32,7 @@ public class BotReplyGuardrailService {
 
     public Reservation reserveBotReply(Long postId, Long botId, Long humanId) {
         String botCountKey = botCountKey(postId);
+        seedBotCounterFromDatabase(postId, botCountKey);
         Long updatedCount = redisTemplate.opsForValue().increment(botCountKey);
 
         if (updatedCount == null) {
@@ -52,6 +57,15 @@ public class BotReplyGuardrailService {
         }
 
         return new Reservation(botCountKey, cooldownKey);
+    }
+
+    private void seedBotCounterFromDatabase(Long postId, String botCountKey) {
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(botCountKey))) {
+            return;
+        }
+
+        long persistedBotComments = commentRepository.countByPostIdAndAuthor_ActorType(postId, ActorType.BOT);
+        redisTemplate.opsForValue().setIfAbsent(botCountKey, Long.toString(persistedBotComments));
     }
 
     public void rollbackReservation(Reservation reservation) {

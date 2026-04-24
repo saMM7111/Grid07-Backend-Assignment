@@ -1,7 +1,10 @@
 package com.sam.assigment.repository;
 
+import com.sam.assigment.domain.ActorType;
 import com.sam.assigment.domain.Comment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
+
+	long countByPostIdAndAuthor_ActorType(Long postId, ActorType actorType);
 }
