@@ -20,14 +20,11 @@
           "raw": "{\n  \"authorType\": \"USER\",\n  \"authorId\": 1,\n  \"content\": \"Launching the first draft of my post\"\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/api/posts",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "posts"
-          ]
+          "raw": "http://localhost:8080/api/posts",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "posts"]
         }
       },
       "response": []
@@ -47,16 +44,11 @@
           "raw": "{\n  \"authorType\": \"BOT\",\n  \"authorId\": 3,\n  \"content\": \"Nice post. I can help summarize the feedback.\",\n  \"depthLevel\": 1\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/api/posts/1/comments",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "posts",
-            "1",
-            "comments"
-          ]
+          "raw": "http://localhost:8080/api/posts/1/comments",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "posts", "1", "comments"]
         }
       },
       "response": []
@@ -76,25 +68,15 @@
           "raw": "{\n  \"actorType\": \"USER\",\n  \"actorId\": 2\n}"
         },
         "url": {
-          "raw": "{{baseUrl}}/api/posts/1/like",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "posts",
-            "1",
-            "like"
-          ]
+          "raw": "http://localhost:8080/api/posts/1/like",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "posts", "1", "like"]
         }
       },
       "response": []
     }
   ],
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:8080"
-    }
-  ]
+  "variable": []
 }
